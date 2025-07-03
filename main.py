@@ -1,124 +1,58 @@
-# Importar
-from flask import Flask, render_template,request, redirect
-# Conectando a la biblioteca de bases de datos
-from flask_sqlalchemy import SQLAlchemy
+import discord
+from discord.ext import commands
+from model import get_class
 
+intents = discord.Intents.default()
+intents.message_content = True
 
-app = Flask(__name__)
-# Conectando SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///diary.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# Creando una base de datos
-db = SQLAlchemy(app)
-# Creación de una tabla
+bot = commands.Bot(command_prefix='$', intents=intents)
 
-class Card(db.Model):
-    # Creación de columnas
-    # id
-    id = db.Column(db.Integer, primary_key=True)
-    # Título
-    title = db.Column(db.String(100), nullable=False)
-    # Descripción
-    subtitle = db.Column(db.String(300), nullable=False)
-    # Texto
-    text = db.Column(db.Text, nullable=False)
+@bot.event
+async def on_ready():
+    print(f'We have logged in as {bot.user}')
 
-    # Salida del objeto y del id
-    def __repr__(self):
-        return f'<Card {self.id}>'
-    
+@bot.command()
+async def hello(ctx):
+    await ctx.send(f'Hi! I am a bot {bot.user}!')
 
-#Asignación #2. Crear la tabla Usuario
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    login = db.Column(db.String(100), nullable=False)
-    password = db.Column(db.String(30), nullable=False)
-    def __repr__(self):
-        return f'<User {self.id}>'
+@bot.command()
+async def heh(ctx, count_heh = 5):
+    await ctx.send("he" * count_heh)
 
+@bot.command()
+async def check(ctx):
+    if ctx.message.attachments:
+        for attachment in ctx.message.attachments:
+            file_name = attachment.filename
+            file_url = attachment.url
+            await attachment.save(file_name)
+            await ctx.send("Archivo guardado")
+            class_name = get_class("keras_model.h5","labels.txt",file_name)
+            await ctx.send(class_name)
 
+            try:
+                class_name = get_class("keras_model.h5","labels.txt",file_name)
+                if class_name [0] == "Paloma":
+                    await ctx.send("Esto es una paloma, es una especie de ave columbiforme de la familia de las colúmbidas​ nativa del sur de Eurasia y del norte de África y las palomas suelen comer semillas, granos, frutas, bayas, e incluso insectos y lombrices.")
+                    
+                elif class_name[0] == "Gorrion":
+                    await ctx.send("Esto es un gorrion es una especie de ave paseriforme de la familia Passeridae y los gorriones viven en zonas urbanas y rurales cerca de asentamientos humanos, incluyendo ciudades, pueblos, suburbios y granjas.")
 
+                elif class_name[0] == "Pantera":
+                    await ctx.send("Esto es un jaguar negro es un críptido o un supuesto nuevo taxón de gran félido del género Panthera, viven en  bosques y selvas, en las sabanas, en los sembrados y en lugares rocosos, e incluso en desiertos, y se alimentan de mamíferos medianos y pequeños.")
 
-# Ejecutar la página de contenidos
-@app.route('/', methods=['GET','POST'])
-def login():
-        error = ''
-        if request.method == 'POST':
-            form_login = request.form['email']
-            form_password = request.form['password']
-            
-            #Asignación #4. Aplicar la autorización
-            users_db = User.query.all()
-            for user in users_db:
-                if form_login == user.login and form_password == user.password:
-                    return redirect('/index')
-            
-            else:
-                error = 'Nombre de usuario o contraseña incorrectos'
-                return render_template('login.html', error=error)
+                elif class_name[0] == "Ballena":
+                    await ctx.send("Esto es una ballena es el mamífero más grande que existe en la Tierra y se alimentan de una variedad de presas marinas, que van desde pequeños crustáceos como el krill hasta peces y calamares.")
 
+                elif class_name[0] == "Oso":
+                    await ctx.send("Esto es un oso es el mamífero perteneciente a la familia Ursidae, conocidos por su gran tamaño y apariencia robusta, y se alimentan de frutas, verduras, raíces, nueces, miel, insectos, peces, carroña y pequeños mamíferos.")
 
-            
-        else:
-            return render_template('login.html')
+            except:
+                await ctx.send("La clasifación ha fallado")
 
-
-@app.route('/reg', methods=['GET','POST'])
-def reg():
-    if request.method == 'POST':
-        login= request.form['email']
-        password = request.form['password']
-        
-        #Asignación #3. Hacer que los datos del usuario se registren en la base de datos.
-        user = User(login=login, password=password)
-        db.session.add(user)
-        db.session.commit()
-        
-        return redirect('/')
-    
-    else:    
-        return render_template('registration.html')
-
-
-# Ejecutar la página de contenidos
-@app.route('/index')
-def index():
-    # Visualización de las entradas de la base de datos
-    cards = Card.query.order_by(Card.id).all()
-    return render_template('index.html', cards=cards)
-
-# Ejecutar la página con la entrada
-@app.route('/card/<int:id>')
-def card(id):
-    card = Card.query.get(id)
-
-    return render_template('card.html', card=card)
-
-# Ejecutar la página de creación de entradas
-@app.route('/create')
-def create():
-    return render_template('create_card.html')
-
-# El formulario de inscripción
-@app.route('/form_create', methods=['GET','POST'])
-def form_create():
-    if request.method == 'POST':
-        title =  request.form['title']
-        subtitle =  request.form['subtitle']
-        text =  request.form['text']
-
-        # Creación de un objeto que se enviará a la base de datos
-        card = Card(title=title, subtitle=subtitle, text=text)
-
-        db.session.add(card)
-        db.session.commit()
-        return redirect('/index')
     else:
-        return render_template('create_card.html')
+        await ctx.send("No hay archivos adjuntos")
 
 
 
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
+bot.run("TOKEN")

@@ -1,0 +1,8 @@
+0 Palomas
+1 Gorriones
+2 Osos
+3 Ballenas
+4 Orcas
+5 Leones
+6 Velociraptores
+7 Panteras
